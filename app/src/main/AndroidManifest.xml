@@ -11,9 +11,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@android:drawable/ic_menu_translate"
+        android:icon="@android:drawable/ic_dialog_info"
         android:label="@string/app_name"
-        android:roundIcon="@android:drawable/ic_menu_translate"
+        android:roundIcon="@android:drawable/ic_dialog_info"
         android:supportsRtl="true"
         android:theme="@style/Theme.AutoTranslator"
         tools:targetApi="31">
