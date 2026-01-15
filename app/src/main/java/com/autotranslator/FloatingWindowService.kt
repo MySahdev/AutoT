@@ -19,7 +19,7 @@ class FloatingWindowService : Service() {
 
     private lateinit var windowManager: WindowManager
     private var floatingView: View? = null
-    private lateinit var translationText: TextView
+    private var translationText: TextView? = null
 
     private val updateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -27,11 +27,21 @@ class FloatingWindowService : Service() {
         }
     }
 
+    companion object {
+        private const val TAG = "FloatingWindowService"
+    }
+
     override fun onCreate() {
         super.onCreate()
 
+        // Android 13+ requires explicit export flag for BroadcastReceiver
         val filter = IntentFilter("com.autotranslator.UPDATE_TRANSLATION")
-        registerReceiver(updateReceiver, filter, RECEIVER_NOT_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(updateReceiver, filter)
+        }
 
         createFloatingWindow()
     }
@@ -40,7 +50,7 @@ class FloatingWindowService : Service() {
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null)
-        translationText = floatingView!!.findViewById(R.id.translationText)
+        translationText = floatingView?.findViewById(R.id.translationText)
 
         val layoutType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -92,7 +102,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun updateTranslation() {
-        translationText.text = ScreenCaptureService.currentTranslation
+        translationText?.text = ScreenCaptureService.currentTranslation
     }
 
     override fun onDestroy() {

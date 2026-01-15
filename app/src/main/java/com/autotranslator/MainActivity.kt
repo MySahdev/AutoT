@@ -4,9 +4,12 @@ import android.app.Activity
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.autotranslator.databinding.ActivityMainBinding
 import com.google.mlkit.common.model.DownloadConditions
@@ -17,16 +20,47 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val SCREEN_CAPTURE_REQUEST_CODE = 100
-    private val OVERLAY_PERMISSION_REQUEST_CODE = 101
+
+    // Use modern Activity Result API instead of deprecated startActivityForResult
+    private lateinit var screenCaptureLauncher: ActivityResultLauncher<Intent>
+    private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent>
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupActivityResultLaunchers()
         setupUI()
         downloadTranslationModels()
+    }
+
+    private fun setupActivityResultLaunchers() {
+        // Modern Activity Result API for screen capture
+        screenCaptureLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+                startServices(result.resultCode, result.data!!)
+            } else {
+                Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Modern Activity Result API for overlay permission
+        overlayPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { _ ->
+            if (checkOverlayPermission()) {
+                startScreenCapture()
+            } else {
+                Toast.makeText(this, "Overlay permission required", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupUI() {
@@ -58,48 +92,35 @@ class MainActivity : AppCompatActivity() {
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
             Uri.parse("package:$packageName")
         )
-        startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE)
+        overlayPermissionLauncher.launch(intent)
     }
 
     private fun startScreenCapture() {
         val mediaProjectionManager =
             getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-        startActivityForResult(captureIntent, SCREEN_CAPTURE_REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        when (requestCode) {
-            SCREEN_CAPTURE_REQUEST_CODE -> {
-                if (resultCode == Activity.RESULT_OK && data != null) {
-                    startServices(resultCode, data)
-                } else {
-                    Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
-                }
-            }
-            OVERLAY_PERMISSION_REQUEST_CODE -> {
-                if (checkOverlayPermission()) {
-                    startScreenCapture()
-                } else {
-                    Toast.makeText(this, "Overlay permission required", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
+        screenCaptureLauncher.launch(captureIntent)
     }
 
     private fun startServices(resultCode: Int, data: Intent) {
-        // Start screen capture service
+        // Start screen capture service using startForegroundService for Android 15+
         val captureIntent = Intent(this, ScreenCaptureService::class.java).apply {
             putExtra("resultCode", resultCode)
             putExtra("data", data)
         }
-        startService(captureIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(captureIntent)
+        } else {
+            startService(captureIntent)
+        }
 
         // Start floating window service
         val floatingIntent = Intent(this, FloatingWindowService::class.java)
-        startService(floatingIntent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(floatingIntent)
+        } else {
+            startService(floatingIntent)
+        }
 
         updateButtonStates(true)
         Toast.makeText(this, "Auto Translator Started", Toast.LENGTH_SHORT).show()
