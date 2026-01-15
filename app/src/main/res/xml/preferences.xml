@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Performance Settings">
+
+        <ListPreference
+            android:key="capture_interval"
+            android:title="Capture Interval"
+            android:summary="How often to capture and translate"
+            android:entries="@array/interval_entries"
+            android:entryValues="@array/interval_values"
+            android:defaultValue="2000" />
+
+        <ListPreference
+            android:key="image_quality"
+            android:title="Image Quality"
+            android:summary="Higher quality uses more memory"
+            android:entries="@array/quality_entries"
+            android:entryValues="@array/quality_values"
+            android:defaultValue="medium" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

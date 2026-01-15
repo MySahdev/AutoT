@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="interval_entries">
+        <item>Very Fast (1 second)</item>
+        <item>Fast (2 seconds)</item>
+        <item>Normal (3 seconds)</item>
+        <item>Slow (5 seconds)</item>
+    </string-array>
+
+    <string-array name="interval_values">
+        <item>1000</item>
+        <item>2000</item>
+        <item>3000</item>
+        <item>5000</item>
+    </string-array>
+
+    <string-array name="quality_entries">
+        <item>Low (Faster, Less Memory)</item>
+        <item>Medium (Balanced)</item>
+        <item>High (Slower, More Accurate)</item>
+    </string-array>
+
+    <string-array name="quality_values">
+        <item>low</item>
+        <item>medium</item>
+        <item>high</item>
+    </string-array>
+</resources>
