@@ -15,7 +15,7 @@ Automatically detects and translates text from your screen to English using Goog
 
 ## Requirements
 
-- Android 7.0 (API 24) or higher
+- **Android 15 (API 35) or higher** - Latest devices only
 - Android Studio Arctic Fox or newer
 - Minimum 2GB RAM recommended
 
